@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Resin Art Supplies | Singh's Resin Art</title>
+  <meta name="description" content="Shop resin art supplies from Singh's Resin Art in Hyderabad. Explore materials and tools for your resin art projects.">
+
+  <link rel="icon" href="favicon.png">
+  <link rel="stylesheet" href="supplies.css">
+</head>
+
+<body>
+  <header class="supplies-header">
+    <a class="brand" href="index.html">
+      <img src="images/logo.png" alt="Singh's Resin Art logo">
+      <span>Singh's Resin Art</span>
+    </a>
+
+    <a class="back-link" href="index.html">← Back to Home</a>
+  </header>
+
+  <main>
+    <section class="supplies-hero">
+      <p class="eyebrow">SINGH'S RESIN ART</p>
+      <h1>Everything for Your <span>Resin Art</span></h1>
+      <p>Discover the materials and tools you need to bring your creativity to life.</p>
+
+      <input
+        id="productSearch"
+        type="search"
+        placeholder="Search resin supplies..."
+        aria-label="Search resin supplies"
+      >
+    </section>
+
+    <section class="catalog">
+      <div class="catalog-heading">
+        <div>
+          <p class="eyebrow">EXPLORE OUR COLLECTION</p>
+          <h2>Resin Supplies</h2>
+        </div>
+        <p id="productCount">Loading products...</p>
+      </div>
+
+      <div id="categoryFilters" class="category-filters"></div>
+
+      <div id="productGrid" class="product-grid">
+        <p class="loading-message">Loading supplies...</p>
+      </div>
+      
+<div class="cart-panel" id="cartPanel">
+  <div class="cart-heading">
+    <div>
+      <p class="eyebrow">YOUR SELECTION</p>
+      <h2>Your Cart (<span id="cartCount">0</span>)</h2>
+    </div>
+  </div>
+
+  <div id="cartItems">
+    <p class="empty-message">Your cart is empty. Add products to get started.</p>
+  </div>
+
+  <div class="cart-summary">
+    <span>Subtotal</span>
+    <strong id="cartSubtotal">₹0</strong>
+  </div>
+
+  <p class="cart-note">
+    Shipping charges and final availability will be confirmed on WhatsApp.
+  </p>
+
+  <button id="checkoutButton" class="whatsapp-button" type="button" disabled>
+    Send Order on WhatsApp
+  </button>
+</div>
+</section>
+
+    </section>
+
+    <section class="supplies-contact">
+      <h2>Need help choosing supplies?</h2>
+      <p>Contact us on WhatsApp for product details and availability.</p>
+      <a
+        class="whatsapp-button"
+        href="https://wa.me/918125072768?text=Hi%20Singh%27s%20Resin%20Art%2C%20I%20need%20help%20with%20resin%20supplies."
+        target="_blank"
+        rel="noopener noreferrer"
+      >Enquire on WhatsApp</a>
+    </section>
+  </main>
+
+  <footer class="supplies-footer">
+    © 2026 Singh's Resin Art · Hyderabad | Designed By Singh's Resin Art
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="supplies-data.js"></script>
+<script src="supplies.js"></script>
+</body>
+</html>
