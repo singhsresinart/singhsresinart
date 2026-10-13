@@ -1,0 +1,954 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Order Management | Singh's Resin Art</title>
+
+  <style>
+    :root {
+      --wine: #782b3b;
+      --wine-dark: #57202c;
+      --cream: #faf7f3;
+      --border: #e8e0d9;
+      --text: #302725;
+      --muted: #766b66;
+      --green: #207348;
+      --red: #a72e38;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--cream);
+      color: var(--text);
+      font-family: Arial, sans-serif;
+    }
+
+    button, input, select { font: inherit; }
+
+    button {
+      cursor: pointer;
+      border: 0;
+      border-radius: 7px;
+      padding: 10px 15px;
+      background: var(--wine);
+      color: white;
+    }
+
+    button:hover { background: var(--wine-dark); }
+    button:disabled { opacity: .55; cursor: wait; }
+
+    input, select {
+      width: 100%;
+      padding: 11px;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      background: white;
+      color: var(--text);
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    .topbar {
+      background: white;
+      border-bottom: 1px solid var(--border);
+      padding: 18px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .brand { color: var(--wine); font-size: 21px; font-weight: 700; }
+    .subtitle { color: var(--muted); font-size: 13px; margin-top: 5px; }
+
+    main {
+      width: min(1250px, 100%);
+      padding: 25px 18px 50px;
+      margin: auto;
+    }
+
+    .panel {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 22px;
+      margin-bottom: 20px;
+    }
+
+    .login-panel {
+      max-width: 420px;
+      margin: 65px auto;
+    }
+
+    h1 { font-size: 25px; margin: 0 0 8px; }
+    h2 { font-size: 18px; margin: 0 0 18px; }
+    .muted { color: var(--muted); }
+    .field { margin: 17px 0; }
+    .message { margin-top: 14px; font-size: 14px; white-space: pre-wrap; }
+    .error { color: var(--red); }
+    .success { color: var(--green); }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: minmax(220px, 1.5fr) repeat(3, minmax(145px, 1fr)) auto auto;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .stat {
+      background: white;
+      border: 1px solid var(--border);
+      padding: 18px;
+      border-radius: 10px;
+    }
+
+    .stat-label { color: var(--muted); font-size: 13px; }
+    .stat-value { overflow-wrap: anywhere; }
+    .stat-value.compact { font-size: 20px; }
+    .toolbar button { white-space: nowrap; }
+    .toolbar .secondary { border: 1px solid var(--border); }
+    .status { text-transform: capitalize; }
+    .status.pending_review { background: #fff1cc; color: #76510a; }
+    .status.accepted { background: #dff4e8; color: #17633e; }
+    .status.rejected { background: #fde5e5; color: #982b34; }
+    .status.unpaid, .status.not_shipped { background: #f0ece8; color: #645851; }
+    .status.paid, .status.shipped { background: #dff4e8; color: #17633e; }
+    .toolbar-actions { display: flex; gap: 8px; }
+    .table-wrap table tbody tr:hover { background: #fcfaf8; }
+    .detail-value { line-height: 1.45; }
+    .small-note { font-size: 12px; color: var(--muted); margin-top: 8px; }
+    .stat-value { font-size: 25px; font-weight: 700; margin-top: 8px; }
+
+    .table-wrap { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 13px 10px;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    th {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
+    .status {
+      display: inline-block;
+      background: #f4ead6;
+      color: #77531a;
+      padding: 5px 8px;
+      border-radius: 20px;
+      font-size: 12px;
+    }
+
+    .details-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .detail-value { margin-top: 6px; overflow-wrap: anywhere; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+    .secondary { background: #eee8e3; color: var(--text); }
+    .secondary:hover { background: #e1d8d0; }
+    .hidden { display: none !important; }
+
+    @media (max-width: 1000px) and (min-width: 651px) {
+      .toolbar { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .toolbar input[type="search"] { grid-column: span 2; }
+      .toolbar-actions { grid-column: span 1; }
+      .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 650px) {
+      .topbar { padding: 15px; }
+      main { padding: 18px 12px; }
+      .toolbar, .stats, .details-grid { grid-template-columns: 1fr; }
+      .toolbar-actions { display: grid; grid-template-columns: 1fr 1fr; }
+      .panel { padding: 16px; }
+      .brand { font-size: 18px; }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="topbar">
+    <div>
+      <div class="brand">Singh's Resin Art</div>
+      <div class="subtitle">Private order management</div>
+    </div>
+    <button id="signOutBtn" class="secondary hidden">Sign out</button>
+  </header>
+
+  <main>
+    <section id="loginPanel" class="panel login-panel">
+      <h1>Admin login</h1>
+      <p class="muted">Sign in with your authorized administrator account.</p>
+
+      <form id="loginForm">
+        <div class="field">
+          <label for="email">Email address</label>
+          <input id="email" type="email" autocomplete="username"
+                 required maxlength="254">
+        </div>
+
+        <div class="field">
+          <label for="password">Password</label>
+          <input id="password" type="password"
+                 autocomplete="current-password" required>
+        </div>
+
+        <button id="loginBtn" type="submit" style="width:100%">
+          Sign in
+        </button>
+        <div id="loginMessage" class="message" role="status"></div>
+      </form>
+    </section>
+
+    <section id="dashboard" class="hidden">
+      <div class="panel">
+        <h1>Orders</h1>
+        <p class="muted">Review customer requests and track order status.</p>
+      </div>
+
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-label">All loaded orders</div>
+          <div id="totalOrders" class="stat-value">—</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Awaiting review</div>
+          <div id="pendingOrders" class="stat-value">—</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Accepted orders</div>
+          <div id="acceptedOrders" class="stat-value">—</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Rejected orders</div>
+          <div id="rejectedOrders" class="stat-value">—</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Order value (loaded)</div>
+          <div id="orderValue" class="stat-value compact">—</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="toolbar">
+          <input id="searchInput" type="search"
+                 placeholder="Search order ID, customer, mobile or email"
+                 aria-label="Search orders">
+          <select id="statusFilter" aria-label="Filter by order status">
+            <option value="">All order statuses</option>
+            <option value="pending_review">Pending review</option>
+            <option value="accepted">Accepted</option>
+            <option value="rejected">Rejected</option>
+          </select>
+          <select id="paymentFilter" aria-label="Filter by payment status">
+            <option value="">All payment statuses</option>
+            <option value="unpaid">Unpaid</option>
+            <option value="paid">Paid</option>
+          </select>
+          <select id="shippingFilter" aria-label="Filter by shipping status">
+            <option value="">All shipping statuses</option>
+            <option value="not_shipped">Not shipped</option>
+            <option value="shipped">Shipped</option>
+          </select>
+          <div class="toolbar-actions">
+            <button id="refreshBtn" type="button">Refresh</button>
+            <button id="exportBtn" type="button" class="secondary">Export CSV</button>
+          </div>
+        </div>
+        <div class="small-note">Summary cards cover all loaded orders; filters only change the list below.</div>
+
+        <div id="ordersMessage" class="message" role="status"></div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Date</th>
+                <th>Customer</th>
+                <th>Mobile</th>
+                <th>Total</th>
+                <th>Status</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+            <tbody id="ordersBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <section id="detailPanel" class="panel hidden">
+        <h2>Order details</h2>
+        <div id="orderDetails"></div>
+        <h2 style="margin-top:25px">Items</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Size</th>
+                <th>Quantity</th>
+                <th>Unit price</th>
+                <th>Line total</th>
+              </tr>
+            </thead>
+            <tbody id="itemsBody"></tbody>
+          </table>
+        </div>
+        <div id="detailMessage" class="message" role="status"></div>
+      </section>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const client = window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_PUBLISHABLE_KEY,
+        {
+          auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true
+          }
+        }
+      );
+
+      const $ = (id) => document.getElementById(id);
+
+      let allOrders = [];
+      let currentUserId = null;
+      let loading = false;
+      let selectedOrderId = null;
+
+      function setMessage(id, text, type = "") {
+        const el = $(id);
+        el.textContent = text;
+        el.className = "message " + type;
+      }
+
+      function showLogin(message = "") {
+        $("loginPanel").classList.remove("hidden");
+        $("dashboard").classList.add("hidden");
+        $("signOutBtn").classList.add("hidden");
+        setMessage("loginMessage", message, message ? "error" : "");
+      }
+
+      function showDashboard() {
+        $("loginPanel").classList.add("hidden");
+        $("dashboard").classList.remove("hidden");
+        $("signOutBtn").classList.remove("hidden");
+      }
+
+      function formatMoney(value) {
+        return new Intl.NumberFormat("en-IN", {
+          style: "currency",
+          currency: "INR"
+        }).format(Number(value || 0));
+      }
+
+      function formatDate(value) {
+        if (!value) return "—";
+        const date = new Date(value);
+        return Number.isNaN(date.getTime())
+          ? "—"
+          : date.toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
+      }
+
+      function addCell(row, text) {
+        const cell = document.createElement("td");
+        cell.textContent = String(text ?? "");
+        row.appendChild(cell);
+        return cell;
+      }
+
+      async function verifyAdmin() {
+        const { data: { user }, error } = await client.auth.getUser();
+
+        if (error || !user) {
+          currentUserId = null;
+          showLogin("Please sign in to continue.");
+          return false;
+        }
+
+        // RLS on sra_orders checks the private admin allowlist.
+        // A non-admin should not be able to read any order.
+        const { data, error: checkError } = await client
+          .from("sra_orders")
+          .select("id")
+          .limit(1);
+
+        if (checkError) {
+          console.error("Admin authorization check failed:", checkError);
+          await client.auth.signOut();
+          currentUserId = null;
+          showLogin(
+            "This account cannot access the admin dashboard. " +
+            "Verify the admin allowlist and RLS policies."
+          );
+          return false;
+        }
+
+        currentUserId = user.id;
+        return true;
+      }
+
+      async function loadOrders() {
+        if (loading) return;
+        loading = true;
+        $("refreshBtn").disabled = true;
+        setMessage("ordersMessage", "Loading orders…");
+
+        try {
+          const { data, error } = await client
+            .from("sra_orders")
+            .select(
+              "id, order_number, created_at, customer_name, customer_mobile, customer_email, shipping_address, subtotal, shipping_charge, total_amount, status, payment_status, shipping_status, pdf_path"
+            )
+            .order("created_at", { ascending: false })
+            .limit(500);
+
+          if (error) throw error;
+
+          allOrders = data || [];
+          renderOrders();
+          updateStats();
+
+          setMessage(
+            "ordersMessage",
+            `Loaded ${allOrders.length} order(s).` +
+            (allOrders.length === 500 ? " Showing the latest 500." : ""),
+            "success"
+          );
+        } catch (error) {
+          console.error("Could not load orders:", error);
+          setMessage(
+            "ordersMessage",
+            "Could not load orders. Check your RLS policies and admin authorization.",
+            "error"
+          );
+        } finally {
+          loading = false;
+          $("refreshBtn").disabled = false;
+        }
+      }
+
+      function updateStats() {
+        $("totalOrders").textContent = allOrders.length;
+        $("pendingOrders").textContent =
+          allOrders.filter(o => o.status === "pending_review").length;
+        $("acceptedOrders").textContent =
+          allOrders.filter(o => o.status === "accepted").length;
+        $("rejectedOrders").textContent =
+          allOrders.filter(o => o.status === "rejected").length;
+        const orderValue = allOrders.reduce(
+          (sum, order) => sum + Number(order.total_amount || 0), 0
+        );
+        $("orderValue").textContent = formatMoney(orderValue);
+      }
+
+      function getFilteredOrders() {
+        const search = $("searchInput").value.trim().toLowerCase();
+        const status = $("statusFilter").value;
+        const payment = $("paymentFilter").value;
+        const shipping = $("shippingFilter").value;
+
+        return allOrders.filter(order => {
+          const searchable = [
+            order.order_number,
+            order.customer_name,
+            order.customer_mobile,
+            order.customer_email,
+            order.shipping_address
+          ].join(" ").toLowerCase();
+
+          return (!search || searchable.includes(search)) &&
+            (!status || order.status === status) &&
+            (!payment || order.payment_status === payment) &&
+            (!shipping || order.shipping_status === shipping);
+        });
+      }
+
+      function clearOrderDetails(message = "Select an order to view its details.") {
+        selectedOrderId = null;
+        $("detailPanel").classList.add("hidden");
+        $("detailPanel").querySelectorAll(".actions").forEach(el => el.remove());
+        $("orderDetails").replaceChildren();
+        $("itemsBody").replaceChildren();
+        setMessage("detailMessage", message);
+      }
+
+      function renderOrders() {
+        const body = $("ordersBody");
+        body.replaceChildren();
+        const filtered = getFilteredOrders();
+
+        // Do not leave details from an order that no longer matches the filters.
+        if (selectedOrderId !== null && !filtered.some(order => order.id === selectedOrderId)) {
+          clearOrderDetails("The selected order is hidden by the current filters. Choose an order from the filtered list to view details.");
+        }
+
+        if (!filtered.length) {
+          const row = document.createElement("tr");
+          const cell = addCell(row, "No matching orders found.");
+          cell.colSpan = 7;
+          body.appendChild(row);
+
+          const payment = $("paymentFilter").value;
+          const allUnpaid = allOrders.length > 0 && allOrders.every(order => order.payment_status === "unpaid");
+          if (payment === "paid" && allUnpaid) {
+            setMessage("ordersMessage", `No paid orders found. All ${allOrders.length} loaded orders are currently unpaid.`, "");
+          } else {
+            setMessage("ordersMessage", `Showing 0 of ${allOrders.length} loaded order(s). Try changing or clearing a filter.`, "");
+          }
+          return;
+        }
+
+        for (const order of filtered) {
+          const row = document.createElement("tr");
+          addCell(row, order.order_number);
+          addCell(row, formatDate(order.created_at));
+          addCell(row, order.customer_name);
+          addCell(row, order.customer_mobile);
+          addCell(row, formatMoney(order.total_amount));
+
+          const statusCell = addCell(row, "");
+          const badge = document.createElement("span");
+          badge.className = "status " + String(order.status || "unknown").toLowerCase();
+          badge.textContent = String(order.status || "unknown").replaceAll("_", " ");
+          statusCell.appendChild(badge);
+
+          const actionCell = addCell(row, "");
+          const button = document.createElement("button");
+          button.type = "button";
+          button.textContent = "View";
+          button.addEventListener("click", () => showOrder(order));
+          actionCell.appendChild(button);
+          body.appendChild(row);
+        }
+
+        setMessage("ordersMessage", `Showing ${filtered.length} of ${allOrders.length} loaded order(s).`, "success");
+      }
+
+      async function showOrder(order) {
+        selectedOrderId = order.id;
+        $("detailPanel").classList.remove("hidden");
+        $("detailPanel").querySelectorAll(".actions").forEach(el => el.remove());
+        $("detailPanel").scrollIntoView({ behavior: "smooth", block: "start" });
+        $("orderDetails").replaceChildren();
+        $("itemsBody").replaceChildren();
+        setMessage("detailMessage", "Loading order items…");
+
+        const grid = document.createElement("div");
+        grid.className = "details-grid";
+
+        const details = [
+          ["Order ID", order.order_number],
+          ["Date", formatDate(order.created_at)],
+          ["Customer", order.customer_name],
+          ["Mobile", order.customer_mobile],
+          ["Email", order.customer_email || "Not provided"],
+          ["Shipping address", order.shipping_address || "Not provided"],
+          ["Subtotal", formatMoney(order.subtotal)],
+          ["Shipping charge", formatMoney(order.shipping_charge)],
+          ["Total", formatMoney(order.total_amount)],
+          ["Order status", order.status],
+          ["Payment status", order.payment_status],
+          ["Shipping status", order.shipping_status],
+          ["PDF path", order.pdf_path || "Not available"]
+        ];
+
+        for (const [label, value] of details) {
+          const box = document.createElement("div");
+          const title = document.createElement("strong");
+          title.textContent = label;
+          const content = document.createElement("div");
+          content.className = "detail-value";
+          content.textContent = String(value ?? "—");
+          box.append(title, content);
+          grid.appendChild(box);
+        }
+
+        $("orderDetails").appendChild(grid);
+
+        const { data: items, error } = await client
+          .from("sra_order_items")
+          .select("product_name, product_size, unit_price, quantity, line_total")
+          .eq("order_id", order.id)
+          .order("id", { ascending: true });
+
+        if (error) {
+          console.error("Could not load order items:", error);
+          setMessage("detailMessage", "Unable to load order items.", "error");
+          return;
+        }
+
+        for (const item of items || []) {
+          const row = document.createElement("tr");
+          addCell(row, item.product_name);
+          addCell(row, item.product_size || "Not recorded");
+          addCell(row, item.quantity);
+          addCell(row, formatMoney(item.unit_price));
+          addCell(row, formatMoney(item.line_total));
+          $("itemsBody").appendChild(row);
+        }
+
+        
+const detailMessage =
+  order.status === "pending_review"
+    ? "Review the items and confirm stock availability before accepting."
+    : `This order is ${order.status}. No further decision is available.`;
+
+setMessage("detailMessage", detailMessage);
+
+if (order.status === "pending_review") {
+  const actions = document.createElement("div");
+  actions.className = "actions";
+
+  const acceptButton = document.createElement("button");
+  acceptButton.type = "button";
+  acceptButton.textContent = "Accept order";
+
+  const rejectButton = document.createElement("button");
+  rejectButton.type = "button";
+  rejectButton.textContent = "Reject order";
+  rejectButton.style.background = "#a72e38";
+
+  acceptButton.addEventListener("click", async () => {
+    const confirmed = window.confirm(
+      `Accept order ${order.order_number}?\n\n` +
+      "Available stock will be deducted. This action cannot be undone here."
+    );
+
+    if (!confirmed) return;
+
+    acceptButton.disabled = true;
+    rejectButton.disabled = true;
+    setMessage("detailMessage", "Accepting order and validating stock…");
+
+    try {
+      const { data, error } = await client.rpc(
+        "sra_admin_decide_order",
+        {
+          p_order_id: order.id,
+          p_decision: "accepted"
+        }
+      );
+
+      if (error) throw error;
+      if (!data || data.success !== true) {
+        throw new Error("The database did not confirm acceptance.");
+      }
+
+      setMessage(
+        "detailMessage",
+        `Order ${order.order_number} accepted successfully.`,
+        "success"
+      );
+
+      await loadOrders();
+        const updatedOrder = allOrders.find(
+        item => item.id === order.id
+        );
+
+        if (updatedOrder) {
+        await showOrder(updatedOrder);
+        }
+    } catch (error) {
+      console.error("Order acceptance failed:", error);
+      setMessage(
+        "detailMessage",
+        error.message || "Could not accept the order. Please refresh and check its status.",
+        "error"
+      );
+      acceptButton.disabled = false;
+      rejectButton.disabled = false;
+    }
+  });
+
+  rejectButton.addEventListener("click", async () => {
+    const confirmed = window.confirm(
+      `Reject order ${order.order_number}?\n\n` +
+      "No stock will be deducted."
+    );
+
+    if (!confirmed) return;
+
+    acceptButton.disabled = true;
+    rejectButton.disabled = true;
+    setMessage("detailMessage", "Rejecting order…");
+
+    try {
+      const { data, error } = await client.rpc(
+        "sra_admin_decide_order",
+        {
+          p_order_id: order.id,
+          p_decision: "rejected"
+        }
+      );
+
+      if (error) throw error;
+      if (!data || data.success !== true) {
+        throw new Error("The database did not confirm rejection.");
+      }
+
+      setMessage(
+        "detailMessage",
+        `Order ${order.order_number} rejected successfully.`,
+        "success"
+      );
+
+      await loadOrders();
+        const updatedOrder = allOrders.find(
+        item => item.id === order.id
+        );
+
+        if (updatedOrder) {
+        await showOrder(updatedOrder);
+        }
+    } catch (error) {
+      console.error("Order rejection failed:", error);
+      setMessage(
+        "detailMessage",
+        error.message || "Could not reject the order. Please refresh and check its status.",
+        "error"
+      );
+      acceptButton.disabled = false;
+      rejectButton.disabled = false;
+    }
+  });
+
+  actions.append(acceptButton, rejectButton);
+  $("detailPanel").appendChild(actions);
+}
+
+// Payment management is separate from order acceptance/rejection.
+const paymentActions = document.createElement("div");
+paymentActions.className = "actions";
+paymentActions.style.marginTop = "12px";
+
+const paymentLabel = document.createElement("label");
+paymentLabel.textContent = "Payment status";
+paymentLabel.style.alignSelf = "center";
+paymentLabel.htmlFor = "paymentStatusSelect";
+
+const paymentSelect = document.createElement("select");
+paymentSelect.id = "paymentStatusSelect";
+paymentSelect.setAttribute("aria-label", "New payment status");
+for (const [value, label] of [
+  ["unpaid", "Unpaid"],
+  ["pending", "Pending"],
+  ["paid", "Paid"]
+]) {
+  const option = document.createElement("option");
+  option.value = value;
+  option.textContent = label;
+  paymentSelect.appendChild(option);
+}
+paymentSelect.value = order.payment_status || "unpaid";
+
+const updatePaymentButton = document.createElement("button");
+updatePaymentButton.type = "button";
+updatePaymentButton.textContent = "Update payment";
+updatePaymentButton.className = "secondary";
+updatePaymentButton.addEventListener("click", async () => {
+  const newStatus = paymentSelect.value;
+  if (newStatus === order.payment_status) {
+    setMessage("detailMessage", "Payment status is already " + newStatus + ".");
+    return;
+  }
+
+  const warning = newStatus === "paid"
+    ? `Mark order ${order.order_number} as PAID?\n\nOnly continue if you have verified that the payment was actually received.`
+    : `Change payment status for ${order.order_number} to ${newStatus}?`;
+  if (!window.confirm(warning)) return;
+
+  updatePaymentButton.disabled = true;
+  paymentSelect.disabled = true;
+  setMessage("detailMessage", "Updating payment status…");
+  try {
+    const { error } = await client.rpc("sra_admin_update_payment_status", {
+      p_order_id: order.id,
+      p_payment_status: newStatus
+    });
+    if (error) throw error;
+
+    setMessage("detailMessage", `Payment status updated to ${newStatus}.`, "success");
+    await loadOrders();
+    const updatedOrder = allOrders.find(item => item.id === order.id);
+    if (updatedOrder) await showOrder(updatedOrder);
+  } catch (error) {
+    console.error("Payment status update failed:", error);
+    setMessage(
+      "detailMessage",
+      error.message || "Could not update payment status. Refresh and try again.",
+      "error"
+    );
+    updatePaymentButton.disabled = false;
+    paymentSelect.disabled = false;
+  }
+});
+paymentActions.append(paymentLabel, paymentSelect, updatePaymentButton);
+$("detailPanel").appendChild(paymentActions);
+
+      }
+
+      function exportOrdersCsv() {
+        const search = $("searchInput").value.trim().toLowerCase();
+        const status = $("statusFilter").value;
+        const payment = $("paymentFilter").value;
+        const shipping = $("shippingFilter").value;
+
+        const rows = allOrders.filter(order => {
+          const searchable = [
+            order.order_number, order.customer_name, order.customer_mobile,
+            order.customer_email, order.shipping_address
+          ].join(" ").toLowerCase();
+          return (!search || searchable.includes(search)) &&
+            (!status || order.status === status) &&
+            (!payment || order.payment_status === payment) &&
+            (!shipping || order.shipping_status === shipping);
+        });
+
+        if (!rows.length) {
+          setMessage("ordersMessage", "There are no matching orders to export.", "error");
+          return;
+        }
+
+        const columns = [
+          ["Order number", "order_number"], ["Date", "created_at"],
+          ["Customer", "customer_name"], ["Mobile", "customer_mobile"],
+          ["Email", "customer_email"], ["Shipping address", "shipping_address"],
+          ["Subtotal", "subtotal"], ["Shipping charge", "shipping_charge"],
+          ["Total", "total_amount"], ["Order status", "status"],
+          ["Payment status", "payment_status"], ["Shipping status", "shipping_status"],
+          ["PDF path", "pdf_path"]
+        ];
+
+        const csvCell = value => {
+          let text = String(value ?? "");
+          if (/^[=+\-@\t\r]/.test(text)) text = "'" + text;
+          return '"' + text.replaceAll('"', '""') + '"';
+        };
+
+        const csv = [
+          columns.map(([label]) => csvCell(label)).join(","),
+          ...rows.map(order => columns.map(([, key]) =>
+            csvCell(key === "created_at" ? formatDate(order[key]) : order[key])
+          ).join(","))
+        ].join("\\r\\n");
+
+        const blob = new Blob(["\\uFEFF", csv], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `singhs-resin-art-orders-${new Date().toISOString().slice(0, 10)}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+        setMessage("ordersMessage", `Exported ${rows.length} order(s) to CSV.`, "success");
+      }
+
+      $("exportBtn").addEventListener("click", exportOrdersCsv);
+
+      $("loginForm").addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const email = $("email").value.trim();
+        const password = $("password").value;
+        $("loginBtn").disabled = true;
+        setMessage("loginMessage", "Signing in…");
+
+        try {
+          const { error } = await client.auth.signInWithPassword({
+            email,
+            password
+          });
+
+          if (error) throw error;
+
+          const allowed = await verifyAdmin();
+          if (!allowed) return;
+
+          showDashboard();
+          await loadOrders();
+        } catch (error) {
+          console.error("Login failed:", error);
+          showLogin("Sign-in failed. Check your credentials and try again.");
+        } finally {
+          $("loginBtn").disabled = false;
+          $("password").value = "";
+        }
+      });
+
+      $("signOutBtn").addEventListener("click", async () => {
+        await client.auth.signOut();
+        currentUserId = null;
+        allOrders = [];
+        $("ordersBody").replaceChildren();
+        clearOrderDetails();
+        showLogin("You have signed out.");
+      });
+
+      $("refreshBtn").addEventListener("click", async () => {
+        if (await verifyAdmin()) await loadOrders();
+      });
+
+      $("searchInput").addEventListener("input", renderOrders);
+      $("statusFilter").addEventListener("change", renderOrders);
+      $("paymentFilter").addEventListener("change", renderOrders);
+      $("shippingFilter").addEventListener("change", renderOrders);
+
+      client.auth.onAuthStateChange((event, session) => {
+        if (event === "SIGNED_OUT" || !session) {
+          currentUserId = null;
+          showLogin();
+        }
+      });
+
+      (async () => {
+        const allowed = await verifyAdmin();
+        if (allowed) {
+          showDashboard();
+          await loadOrders();
+        }
+      })();
+    })();
+  </script>
+</body>
+</html>
